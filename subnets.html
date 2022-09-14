@@ -150,11 +150,11 @@
                 newCell.appendChild(document.createTextNode(inet_ntoa(address) + '/' + mask));
                 newRow.appendChild(newCell);
 
-                var boardcastIP = 1
+                var broadcastIP = 1
                 var addressFirst = address;
                 var addressLast = subnet_last_address(address, mask);
                 var useableFirst = address + reserved;
-                var useableLast = addressLast - boardcastIP;
+                var useableLast = addressLast - broadcastIP;
                 var numHosts;
                 var addressRange;
                 var usaebleRange;
