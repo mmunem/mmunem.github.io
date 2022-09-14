@@ -153,8 +153,8 @@
                 var boardcastIP = 1
                 var addressFirst = address;
                 var addressLast = subnet_last_address(address, mask);
-                var useableFirst = address;
-                var useableLast = addressLast;
+                var useableFirst = address + reserved;
+                var useableLast = addressLast - boardcastIP;
                 var numHosts;
                 var addressRange;
                 var usaebleRange;
