@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GitHub Folders</title>
+  </head>
+  <body>
+    <h1>GitHub Folders</h1>
+    <ul id="folder-list"></ul>
+
+    <script>
+      async function getFolders() {
+        const response = await fetch('https://api.github.com/repos/boto/botocore/contents/botocore/data');
+        const data = await response.json();
+        const folders = data.filter(entry => entry.type === 'dir');
+
+        const folderList = document.getElementById('folder-list');
+        for (const folder of folders) {
+          const listItem = document.createElement('li');
+          listItem.textContent = folder.name;
+          folderList.appendChild(listItem);
+        }
+      }
+
+      getFolders();
+    </script>
+  </body>
+</html>
