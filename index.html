@@ -81,8 +81,7 @@
                 /* Create the bookmark hyperlink */
                 var link = document.getElementById('saveLink');
                 if (link) {
-                    link.href = 'subnets.html?network=' + inet_ntoa(curNetwork) + '&mask=' + curMask + '&reserved=' + curReserved + '&division=' + binToAscii(nodeToString(rootSubnet));
-                }
+                    link.href = window.location.href.split("/").slice(-1)[0] + '?network=' + inet_ntoa(curNetwork) + '&mask=' + curMask + '&reserved=' + curReserved + '&division=' + binToAscii(nodeToString(rootSubnet));                }
             }
     
             function nodeToString(node) {
