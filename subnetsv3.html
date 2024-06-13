@@ -55,18 +55,17 @@
             <div>
                 <label for="subnetMethod" class="form-label">Subnetting Method</label>
                 <select name="subnetMethod" id="subnetMethod" class="form-select">
-                    <option value="standard">Standard Subnetting</option>
                     <option value="vlsm">VLSM</option>
-                    <option value="equal">Equal Subnetting</option>
+                    <option value="equal" selected="selected">Equal Subnetting</option>
                 </select>
             </div>
             <div id="vlsmInputs" style="display:none;">
                 <label for="subnetSizes" class="form-label">Enter Subnet Sizes (comma-separated)</label>
                 <input type="text" id="subnetSizes" name="subnetSizes" class="form-control">
             </div>
-            <div id="equalInputs" style="display:none;">
+            <div id="equalInputs">
                 <label for="numberOfSubnets" class="form-label">Number of Equal Subnets</label>
-                <input type="number" id="numberOfSubnets" name="numberOfSubnets" class="form-control">
+                <input type="number" id="numberOfSubnets" name="numberOfSubnets" value="1" class="form-control">
             </div>
             <div>
                 <label class="form-label">&nbsp;</label>
@@ -181,16 +180,9 @@
 
         if (subnetMethod === 'vlsm') {
             calculateVLSM();
-        } else if (subnetMethod === 'equal') {
-            calculateEqualSubnets();
         } else {
-            calculateStandardSubnet();
+            calculateEqualSubnets();
         }
-    }
-
-    function calculateStandardSubnet() {
-        rootSubnet = [curNetwork, curMask, null];
-        recreateTables();
     }
 
     function calculateVLSM() {
@@ -242,11 +234,14 @@
             calcbody.removeChild(calcbody.firstChild);
         }
 
-        if (Array.isArray(rootSubnet) && rootSubnet.length > 0) {
+        if (Array.isArray(rootSubnet)) {
             rootSubnet.forEach(function (subnet) {
                 createRow(calcbody, subnet, subnet[0], subnet[1], [subnet[1], subnet[1], subnet], 1, curReserved);
             });
         } else {
+            updateNumChildren(rootSubnet);
+            updateDepthChildren(rootSubnet);
+
             createRow(calcbody, rootSubnet, curNetwork, curMask, [curMask, rootSubnet[1], rootSubnet], rootSubnet[0], curReserved);
         }
 
@@ -304,96 +299,110 @@
     }
 
     function createRow(calcbody, node, address, mask, labels, depth, reserved) {
-        var newRow = document.createElement('TR');
-        calcbody.appendChild(newRow);
+        if (node[2]) {
+            var newlabels = labels;
+            newlabels.push(mask + 1);
+            newlabels.push(node[2][0][1]);
+            newlabels.push(node[2][0]);
+            createRow(calcbody, node[2][0], address, mask + 1, newlabels, depth - 1, reserved);
 
-        var newCell = document.createElement('TD');
-        newCell.appendChild(document.createTextNode(inet_ntoa(address) + '/' + mask));
-        newRow.appendChild(newCell);
-
-        var broadcastIP = 1;
-        var addressFirst = address;
-        var addressLast = subnet_last_address(address, mask);
-        var useableFirst = address + reserved;
-        var useableLast = addressLast - broadcastIP;
-        var numHosts;
-        var addressRange;
-        var useableRange;
-
-        if (mask == 32) {
-            addressRange = inet_ntoa(addressFirst);
-            useableRange = addressRange;
-            numHosts = 1;
+            newlabels = new Array();
+            newlabels.push(mask + 1);
+            newlabels.push(node[2][1][1]);
+            newlabels.push(node[2][1]);
+            createRow(calcbody, node[2][1], address + subnet_addresses(mask + 1), mask + 1, newlabels, depth - 1, reserved);
         } else {
-            addressRange = inet_ntoa(addressFirst) + ' - ' + inet_ntoa(addressLast);
-            if (mask == 31) {
-                useableRange = addressRange;
-                numHosts = 2;
-            } else {
-                useableRange = inet_ntoa(useableFirst) + ' - ' + inet_ntoa(useableLast);
-                numHosts = Math.abs(1 + useableLast - useableFirst);
-            }
-        }
-
-        var newCell = document.createElement('TD');
-        newCell.appendChild(document.createTextNode(inet_ntoa(subnet_netmask(mask))));
-        newRow.appendChild(newCell);
-
-        var newCell = document.createElement('TD');
-        newCell.appendChild(document.createTextNode(addressRange));
-        newRow.appendChild(newCell);
-
-        var newCell = document.createElement('TD');
-        newCell.appendChild(document.createTextNode(useableRange));
-        newRow.appendChild(newCell);
-
-        var newCell = document.createElement('TD');
-        newCell.appendChild(document.createTextNode(numHosts));
-        newRow.appendChild(newCell);
-
-        var newCell = document.createElement('TD');
-        newRow.appendChild(newCell);
-
-        if (mask == 32) {
-            var newLink = document.createElement('SPAN');
-            newLink.className = 'disabledAction';
-            newLink.appendChild(document.createTextNode('Divide'));
-            newCell.appendChild(newLink);
-        } else {
-            var newLink = document.createElement('A');
-            newLink.href = '#';
-            newLink.onclick = function () {
-                divide(node);
-                return false;
-            }
-            newLink.appendChild(document.createTextNode('Divide'));
-            newCell.appendChild(newLink);
-        }
-
-        var colspan = depth - node[0];
-
-        for (var i = (labels.length / 3) - 1; i >= 0; i--) {
-            var mask = labels[i * 3];
-            var rowspan = labels[(i * 3) + 1];
-            var joinnode = labels[(i * 3) + 2];
+            var newRow = document.createElement('TR');
+            calcbody.appendChild(newRow);
 
             var newCell = document.createElement('TD');
-            newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
-            newCell.colSpan = (colspan > 1 ? colspan : 1);
-
-            if (i == (labels.length / 3) - 1) {
-                newCell.className = 'maskSpan';
-            } else {
-                newCell.className = 'maskSpanJoinable';
-                newCell.onclick = newJoin(joinnode);
-            }
-
-            var newImg = document.createElement('IMG');
-            newImg.src = 'img/' + mask + '.gif';
-            newCell.appendChild(newImg);
+            newCell.appendChild(document.createTextNode(inet_ntoa(address) + '/' + mask));
             newRow.appendChild(newCell);
 
-            colspan = 1;
+            var broadcastIP = 1;
+            var addressFirst = address;
+            var addressLast = subnet_last_address(address, mask);
+            var useableFirst = address + reserved;
+            var useableLast = addressLast - broadcastIP;
+            var numHosts;
+            var addressRange;
+            var useableRange;
+
+            if (mask == 32) {
+                addressRange = inet_ntoa(addressFirst);
+                useableRange = addressRange;
+                numHosts = 1;
+            } else {
+                addressRange = inet_ntoa(addressFirst) + ' - ' + inet_ntoa(addressLast);
+                if (mask == 31) {
+                    useableRange = addressRange;
+                    numHosts = 2;
+                } else {
+                    useableRange = inet_ntoa(useableFirst) + ' - ' + inet_ntoa(useableLast);
+                    numHosts = Math.abs(1 + useableLast - useableFirst);
+                }
+            }
+
+            var newCell = document.createElement('TD');
+            newCell.appendChild(document.createTextNode(inet_ntoa(subnet_netmask(mask))));
+            newRow.appendChild(newCell);
+
+            var newCell = document.createElement('TD');
+            newCell.appendChild(document.createTextNode(addressRange));
+            newRow.appendChild(newCell);
+
+            var newCell = document.createElement('TD');
+            newCell.appendChild(document.createTextNode(useableRange));
+            newRow.appendChild(newCell);
+
+            var newCell = document.createElement('TD');
+            newCell.appendChild(document.createTextNode(numHosts));
+            newRow.appendChild(newCell);
+
+            var newCell = document.createElement('TD');
+            newRow.appendChild(newCell);
+
+            if (mask == 32) {
+                var newLink = document.createElement('SPAN');
+                newLink.className = 'disabledAction';
+                newLink.appendChild(document.createTextNode('Divide'));
+                newCell.appendChild(newLink);
+            } else {
+                var newLink = document.createElement('A');
+                newLink.href = '#';
+                newLink.onclick = function () {
+                    divide(node);
+                    return false;
+                }
+                newLink.appendChild(document.createTextNode('Divide'));
+                newCell.appendChild(newLink);
+            }
+
+            var colspan = depth - node[0];
+
+            for (var i = (labels.length / 3) - 1; i >= 0; i--) {
+                var mask = labels[i * 3];
+                var rowspan = labels[(i * 3) + 1];
+                var joinnode = labels[(i * 3) + 2];
+
+                var newCell = document.createElement('TD');
+                newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
+                newCell.colSpan = (colspan > 1 ? colspan : 1);
+
+                if (i == (labels.length / 3) - 1) {
+                    newCell.className = 'maskSpan';
+                } else {
+                    newCell.className = 'maskSpanJoinable';
+                    newCell.onclick = newJoin(joinnode);
+                }
+
+                var newImg = document.createElement('IMG');
+                newImg.src = 'img/' + mask + '.gif';
+                newCell.appendChild(newImg);
+                newRow.appendChild(newCell);
+
+                colspan = 1;
+            }
         }
     }
 
@@ -509,6 +518,7 @@
         generateMaskBitDropdown(16)
 
         if (args['network'] && args['mask'] && args['division']) {
+
             document.forms['calc'].elements['network'].value = args['network'];
             document.forms['calc'].elements['netbits'].value = args['mask'];
             document.forms['calc'].elements['reserved'].value = args['reserved'];
@@ -606,12 +616,9 @@
         if (this.value === 'vlsm') {
             document.getElementById('vlsmInputs').style.display = 'block';
             document.getElementById('equalInputs').style.display = 'none';
-        } else if (this.value === 'equal') {
-            document.getElementById('vlsmInputs').style.display = 'none';
-            document.getElementById('equalInputs').style.display = 'block';
         } else {
             document.getElementById('vlsmInputs').style.display = 'none';
-            document.getElementById('equalInputs').style.display = 'none';
+            document.getElementById('equalInputs').style.display = 'block';
         }
     });
 </script>
