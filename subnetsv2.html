@@ -1,0 +1,50 @@
+function updateNetwork() {
+    var newNetworkStr = document.forms['calc'].elements['network'].value;
+    var newMask = parseInt(document.forms['calc'].elements['netbits'].value);
+    var newReserved = parseInt(document.forms['calc'].elements['reserved'].value);
+    var subnetMethod = document.forms['calc'].elements['subnetMethod'].value;
+    var newNetwork = inet_aton(newNetworkStr);
+
+    if (newNetwork === null) {
+        alert('Invalid network address entered');
+        return;
+    }
+
+    var tmpNetwork = network_address(newNetwork, newMask);
+    if (newNetwork != tmpNetwork) {
+        alert('The network address entered is not on a network boundary for this mask.\nIt has been changed to ' + inet_ntoa(tmpNetwork) + '.');
+        newNetwork = tmpNetwork;
+        document.forms['calc'].elements['network'].value = inet_ntoa(tmpNetwork);
+    }
+
+    if (newMask < 0 || newMask > 32) {
+        alert('The network mask you have entered is invalid');
+        return;
+    }
+
+    curNetwork = newNetwork;
+    curMask = newMask;
+    curReserved = newReserved;
+
+    if (subnetMethod === 'vlsm') {
+        calculateVLSM();
+    } else if (subnetMethod === 'equal') {
+        calculateEqualSubnets();
+    } else {
+        recreateTables();
+    }
+}
+
+function calculateVLSM() {
+    // VLSM calculation logic
+    // Prompt user for each subnet size and calculate the ranges accordingly
+    // Update the table with VLSM subnets
+}
+
+function calculateEqualSubnets() {
+    // Equal subnetting logic
+    // Divide the network into equal subnets based on user input
+    // Update the table with equal subnets
+}
+
+// Add additional UI elements for choosing subnetting method and providing inputs for VLSM and Equal Subnetting
