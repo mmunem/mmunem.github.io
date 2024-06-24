@@ -7,30 +7,44 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
         .disabledAction { color: #dddddd; }
-        .maskSpan { background-color: #cccccc; text-align: right; }
-        .maskSpanJoinable { background-color: #cccccc; text-align: right; cursor: pointer; }
+        .maskSpan, .maskSpanJoinable {
+            background-color: #cccccc;
+            text-align: right;
+            font-size: 0.9rem;
+            vertical-align: middle;
+            padding: 0.25rem;
+        }
+        .maskSpanJoinable { cursor: pointer; }
         .table-responsive { overflow-x: auto; }
+        .calc td { padding: 0.5rem; }
         .maskSpan img, .maskSpanJoinable img {
-            width: 2em;
+            width: 1.5em;
             height: auto;
             vertical-align: middle;
+            margin-right: 0.25em;
         }
-
-        .maskSpan, .maskSpanJoinable {
-        font-size: 1rem;  /* Match this to your body font size */
-        vertical-align: middle;
-        padding: 0.25rem 0.5rem;
+        .join-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
-
         @media (max-width: 768px) {
             .form-group { margin-bottom: 1rem; }
+            .maskSpan, .maskSpanJoinable {
+                font-size: 0.8rem;
+                padding: 0.1rem;
+            }
+            .maskSpan img, .maskSpanJoinable img {
+                width: 1.2em;
+            }
+            .calc td { padding: 0.25rem; }
         }
     </style>
 </head>
 <body>
 
 <div class="container-fluid pt-4">
-    <h1 class="display-4">Visual Cloud Subnet Calculator v5.0</h1>
+    <h1 class="display-4">Visual Cloud Subnet Calculator v5.1</h1>
 
     <p>Enter the network you wish to subnet:</p>
 
@@ -387,38 +401,46 @@
 
             var colspan = depth - node[0];
 
-            for (var i = (labels.length / 3) - 1; i >= 0; i--) {
-                var mask = labels[i * 3];
-                var rowspan = labels[(i * 3) + 1];
-                var joinnode = labels[(i * 3) + 2];
+for (var i = (labels.length / 3) - 1; i >= 0; i--) {
+    var mask = labels[i * 3];
+    var rowspan = labels[(i * 3) + 1];
+    var joinnode = labels[(i * 3) + 2];
 
-                var newCell = document.createElement('TD');
-                newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
-                newCell.colSpan = (colspan > 1 ? colspan : 1);
+    var newCell = document.createElement('TD');
+    newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
+    newCell.colSpan = (colspan > 1 ? colspan : 1);
 
-                if (i == (labels.length / 3) - 1) {
-                    newCell.className = 'maskSpan';
-                } else {
-                    newCell.className = 'maskSpanJoinable';
-                    newCell.onclick = newJoin(joinnode);
-                }
+    if (i == (labels.length / 3) - 1) {
+        newCell.className = 'maskSpan';
+    } else {
+        newCell.className = 'maskSpanJoinable';
+        newCell.onclick = newJoin(joinnode);
+    }
 
-                var newImg = document.createElement('IMG');
-                newImg.src = 'img/' + mask + '.svg';
-                newImg.alt = '/' + mask;  // Add alt text for accessibility
-                newImg.style.width = '2em';  // Ensure consistent sizing
-                newImg.style.height = 'auto';
-                newCell.appendChild(newImg);
+    var container = document.createElement('DIV');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'flex-end';
 
-                var textSpan = document.createElement('SPAN');
-                textSpan.textContent = '/' + mask;
-                textSpan.style.marginLeft = '0.5em';  // Add some space between image and text
-                newCell.appendChild(textSpan);
+    var newImg = document.createElement('IMG');
+    newImg.src = 'img/' + mask + '.svg';
+    newImg.alt = '/' + mask;
+    newImg.style.width = '2em';
+    newImg.style.height = 'auto';
+    newImg.style.marginRight = '0.25em';
 
-                newRow.appendChild(newCell);
+    var textSpan = document.createElement('SPAN');
+    textSpan.textContent = '/' + mask;
 
-                colspan = 1;
-            }
+    container.appendChild(newImg);
+    container.appendChild(textSpan);
+    newCell.appendChild(container);
+
+    newRow.appendChild(newCell);
+
+    colspan = 1;
+    }
+
         }
     }
 
