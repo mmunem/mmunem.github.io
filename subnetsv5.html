@@ -11,9 +11,17 @@
         .maskSpanJoinable { background-color: #cccccc; text-align: right; cursor: pointer; }
         .table-responsive { overflow-x: auto; }
         .maskSpan img, .maskSpanJoinable img {
-            width: 100%;
+            width: 2em;
             height: auto;
+            vertical-align: middle;
         }
+
+        .maskSpan, .maskSpanJoinable {
+        font-size: 1rem;  /* Match this to your body font size */
+        vertical-align: middle;
+        padding: 0.25rem 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .form-group { margin-bottom: 1rem; }
         }
@@ -397,7 +405,16 @@
 
                 var newImg = document.createElement('IMG');
                 newImg.src = 'img/' + mask + '.svg';
+                newImg.alt = '/' + mask;  // Add alt text for accessibility
+                newImg.style.width = '2em';  // Ensure consistent sizing
+                newImg.style.height = 'auto';
                 newCell.appendChild(newImg);
+
+                var textSpan = document.createElement('SPAN');
+                textSpan.textContent = '/' + mask;
+                textSpan.style.marginLeft = '0.5em';  // Add some space between image and text
+                newCell.appendChild(textSpan);
+
                 newRow.appendChild(newCell);
 
                 colspan = 1;
