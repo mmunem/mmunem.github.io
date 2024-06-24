@@ -198,19 +198,27 @@
     }
 
     function calculateEqualSubnets() {
-        var numberOfSubnets = parseInt(document.getElementById('numberOfSubnets').value);
-        var newMask = curMask + Math.ceil(Math.log2(numberOfSubnets));
+    var numberOfSubnets = parseInt(document.getElementById('numberOfSubnets').value);
+    var newMask = curMask + Math.ceil(Math.log2(numberOfSubnets));
 
-        rootSubnet = [0, 0, null];
-        var currentAddress = curNetwork;
+    if (newMask > 32) {
+        alert("Cannot create " + numberOfSubnets + " subnets. Maximum possible is " + (1 << (32 - curMask)) + ".");
+        return;
+    }
 
-        for (var i = 0; i < numberOfSubnets; i++) {
-            var subnet = [0, 0, null];
-            rootSubnet[2] = rootSubnet[2] || [];
-            rootSubnet[2].push(subnet);
-        }
+    rootSubnet = [0, 0, null];
+    rootSubnet[2] = [];
 
-        recreateTables();
+    var subnetSize = subnet_addresses(newMask);
+    var availableAddresses = subnet_addresses(curMask);
+
+    for (var i = 0; i < numberOfSubnets && i * subnetSize < availableAddresses; i++) {
+        var subnetAddress = curNetwork + (i * subnetSize);
+        var subnet = [subnetAddress, newMask, null];
+        rootSubnet[2].push(subnet);
+    }
+
+    recreateTables();
     }
 
     function startOver() {
@@ -219,34 +227,32 @@
     }
 
     function recreateTables() {
-        var calcbody = document.getElementById('calcbody');
-        if (!calcbody) {
-            alert('Body not found');
-            return;
-        }
-
-        while (calcbody.hasChildNodes()) {
-            calcbody.removeChild(calcbody.firstChild);
-        }
-
-        if (rootSubnet[2]) {
-            rootSubnet[2].forEach(function (subnet, index) {
-                var subnetAddress = curNetwork + (index * subnet_addresses(curMask + 1));
-                createRow(calcbody, subnet, subnetAddress, curMask + 1, [curMask + 1, rootSubnet[1], subnet], 1, curReserved);
-            });
-        } else {
-            createRow(calcbody, rootSubnet, curNetwork, curMask, [curMask, rootSubnet[1], rootSubnet], 1, curReserved);
-        }
-
-        document.getElementById('joinHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
-        document.getElementById('col_join').span = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
-
-        var link = document.getElementById('saveLink');
-        if (link) {
-            link.href = window.location.href.split("/").slice(-1)[0] + '?network=' + inet_ntoa(curNetwork) + '&mask=' + curMask + '&reserved=' + curReserved + '&division=' + binToAscii(nodeToString(rootSubnet));
-        }
+    var calcbody = document.getElementById('calcbody');
+    if (!calcbody) {
+        alert('Body not found');
+        return;
     }
 
+    while (calcbody.hasChildNodes()) {
+        calcbody.removeChild(calcbody.firstChild);
+    }
+
+    if (rootSubnet[2]) {
+        rootSubnet[2].forEach(function (subnet) {
+            createRow(calcbody, subnet, subnet[0], subnet[1], [subnet[1], 1, subnet], 1, curReserved);
+        });
+    } else {
+        createRow(calcbody, rootSubnet, curNetwork, curMask, [curMask, rootSubnet[1], rootSubnet], 1, curReserved);
+    }
+
+    document.getElementById('joinHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
+    document.getElementById('col_join').span = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
+
+    var link = document.getElementById('saveLink');
+    if (link) {
+        link.href = window.location.href.split("/").slice(-1)[0] + '?network=' + inet_ntoa(curNetwork) + '&mask=' + curMask + '&reserved=' + curReserved + '&division=' + binToAscii(nodeToString(rootSubnet));
+    }
+}   
     function nodeToString(node) {
         if (node[2]) {
             return '1' + nodeToString(node[2][0]) + nodeToString(node[2][1]);
